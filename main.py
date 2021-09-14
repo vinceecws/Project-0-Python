@@ -2,16 +2,10 @@ import json
 import re
 import urllib.request as request
 import urllib.parse as parse
-import config
+from config import *
+from typing import Any
 
 from urllib.error import HTTPError
-
-API_KEY = config.API_KEY
-UNITS = "imperial"
-BASE_URL = "http://api.openweathermap.org/"
-GEO_ENDPOINT = "/geo/1.0/direct"
-WEATHER_ENDPOINT = "/data/2.5/onecall"
-EXCLUDE_OPTS = {"current", "minutely", "hourly", "daily", "alerts"}
 
 
 def get_geo(city: str, state: str, limit: int = 10) -> dict[str, str]:
@@ -25,7 +19,7 @@ def get_geo(city: str, state: str, limit: int = 10) -> dict[str, str]:
     return res
 
 
-def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, object]:
+def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, Any]:
     if exclude is not None:
         if exclude not in EXCLUDE_OPTS:
             raise ValueError("Invalid argument for exclude. Must be one of {}".format(EXCLUDE_OPTS))
@@ -47,7 +41,7 @@ def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, object]:
 def extract_input(in_str: str) -> (str, str):
     # Like Queens,NY
     reg = "([A-Za-z -]+),([A-Za-z ]{2})$"
-    res = re.search(reg, in_str)
+    res = re.search(reg, in_str.trim())
 
     if res is not None:
         return res.group(1), res.group(2)

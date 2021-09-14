@@ -1,4 +1,9 @@
+# Meta
 .DS_Store
-
 .idea
+
+# Virtual environment
 venv
+
+# Code
+config.py

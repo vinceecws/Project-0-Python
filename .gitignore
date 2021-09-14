@@ -1,6 +1,7 @@
 # Meta
 .DS_Store
 .idea
+__pycache__
 
 # Virtual environment
 venv

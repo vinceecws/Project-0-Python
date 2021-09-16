@@ -1,43 +1,43 @@
 from typing import Any
-import datetime
-
-
-def get_current_local_datetime(to_timestamp: bool = False) -> datetime:
-    if to_timestamp:
-        return datetime.datetime.now().timestamp()
-
-    return datetime.datetime.now()
-
-
-def get_current_utc_datetime(to_timestamp: bool = False) -> datetime:
-    if to_timestamp:
-        return datetime.datetime.utcnow().timestamp()
-
-    return datetime.datetime.utcnow()
-
-
-def format_datetime(dt: int, timezone: datetime.tzinfo = None, fmt: str = "%A, %d %B %Y") -> str:
-    return datetime.datetime.fromtimestamp(dt, timezone).strftime(fmt)
+from datetime import timezone as tz, timedelta
+from .frequency import Current, Minutely, Hourly, Daily, Alerts
 
 
 class WeatherData:
 
     def __init__(self, data: dict[str, Any], city: str, state: str) -> None:
-        lat = data["lat"]
-        lon = data["lon"]
-        timezone = datetime.timezone(datetime.timedelta(seconds=int(data["timezone_offset"])))
+        self._data = data
+        self.lat = float(self._data["lat"])
+        self.lon = float(self._data["lon"])
+        self.city = city
+        self.state = state
+        self.timezone = tz(timedelta(seconds=int(data["timezone_offset"])))
+        self.alerts = Alerts(self._data["alerts"], city, state, self.timezone) if "alerts" in self._data else None
+        self._current = None
+        self._minutely = None
+        self._hourly = None
+        self._daily = None
 
-    def print_horizontal(self):
-        pass
+    @property
+    def current(self) -> Current:
+        if self._current is None:
+            self._current = Current(self._data["current"], self.city, self.state, self.timezone)
+        return self._current
 
-    def plot_time_data(self):
-        pass
+    @property
+    def minutely(self) -> Minutely:
+        if self._minutely is None:
+            self._minutely = Minutely(self._data["minutely"], self.city, self.state, self.timezone)
+        return self._minutely
 
+    @property
+    def hourly(self) -> Hourly:
+        if self._hourly is None:
+            self._hourly = Hourly(self._data["hourly"], self.city, self.state, self.timezone)
+        return self._hourly
 
-class Weather:
-
-    def print_weather_icon(self):
-        pass
-
-    def print_report(self):
-        pass
+    @property
+    def daily(self) -> Daily:
+        if self._daily is None:
+            self._daily = Daily(self._data["daily"], self.city, self.state, self.timezone)
+        return self._daily

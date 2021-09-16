@@ -2,21 +2,33 @@ import json
 import re
 import urllib.request as request
 import urllib.parse as parse
-from config import *
-from typing import Any
 
+from config import *
+from constants import *
+from weather.weather_data import WeatherData
+from typing import Any
+from termcolor import colored
 from urllib.error import HTTPError
 
 
 def get_geo(city: str, state: str, limit: int = 10) -> dict[str, str]:
     url = parse.urljoin(BASE_URL, GEO_ENDPOINT) + \
-          "?q={},{},US&limit={}&appid={}".format(city, state, limit, API_KEY)
+          f"?q={city},{state},US&limit={limit}&appid={API_KEY}"
     try:
         res = json.loads(request.urlopen(url).read())
     except HTTPError as err:
-        raise HTTPError("Error code: {}".format(err.code))
+        raise HTTPError(f"Error code: {err.code}")
 
-    return res
+    return next(({
+        "lat": x["lat"],
+        "lon": x["lon"],
+        "city": x["name"],
+        "state": x["state"]
+    } for x in res
+        if x["name"].lower() == city.lower() and
+        x["state"].lower() == state.lower() and
+        x["country"].lower() == "us"
+    ), None)
 
 
 def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, Any]:
@@ -25,15 +37,15 @@ def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, Any]:
             raise ValueError("Invalid argument for exclude. Must be one of {}".format(EXCLUDE_OPTS))
         else:
             url = parse.urljoin(BASE_URL, WEATHER_ENDPOINT) + \
-                  "?lat={}&lon={}&exclude={}&appid={}&units={}".format(lat, lon, exclude, API_KEY, UNITS)
+                  f"?lat={lat}&lon={lon}&exclude={exclude}&appid={API_KEY}&units={UNITS}"
     else:
         url = parse.urljoin(BASE_URL, WEATHER_ENDPOINT) + \
-              "?lat={}&lon={}&appid={}&units={}".format(lat, lon, API_KEY, UNITS)
+              f"?lat={lat}&lon={lon}&appid={API_KEY}&units={UNITS}"
 
     try:
         res = json.loads(request.urlopen(url).read())
     except HTTPError as err:
-        raise HTTPError("Error code: {}".format(err.code))
+        raise HTTPError(f"Error code: {err.code}")
 
     return res
 
@@ -41,7 +53,7 @@ def get_weather(lat: str, lon: str, exclude: str = None) -> dict[str, Any]:
 def extract_input(in_str: str) -> (str, str):
     # Like Queens,NY
     reg = "([A-Za-z -]+),([A-Za-z ]{2})$"
-    res = re.search(reg, in_str.trim())
+    res = re.search(reg, in_str.strip())
 
     if res is not None:
         return res.group(1), res.group(2)
@@ -66,11 +78,50 @@ def clear_and_print_banner() -> None:
     print_banner()
 
 
-def main(args: list[str]) -> None:
-    pass
+def main() -> None:
+    while True:
+        clear_and_print_banner()
+
+        while True:
+            place = input(colored("Which city's weather would you like to see? Input as: city,state\n", attrs=["bold"]))
+            city_state = extract_input(place)
+            lat_lon = get_geo(city_state[0], city_state[1])
+
+            if lat_lon is not None:
+                break
+
+            print(colored("\n There does not seem to be any good matches to your search. Try something like: Queens,NY",
+                          attrs=["bold"]))
+
+        weather_data = WeatherData(get_weather(lat_lon["lat"], lat_lon["lon"]), lat_lon["city"], lat_lon["state"])
+
+        while True:
+            clear_and_print_banner()
+            weather_data.current.print_report()
+
+            print(colored("Check out one of the forecasts:", attrs=["bold"]))
+            print("1) Minutely-precipitation for the next 60-minutes")
+            print("2) Hourly-weather for the next 24-hours")
+            print("3) Daily-weather for the next 7-days")
+            print("Or, 4) Try a different city")
+
+            selection = input(colored("Your selection: ", attrs=["bold"]))
+
+            if selection == "1":
+                weather_data.minutely.print_report()
+                weather_data.minutely.plot_data()
+            elif selection == "2":
+                weather_data.hourly.print_report()
+                weather_data.hourly.plot_data()
+            elif selection == "3":
+                weather_data.daily.print_report()
+                weather_data.daily.plot_data()
+            elif selection == "4":
+                break
+            else:
+                print(colored("Invalid selection.", "red"))
+                input(colored("Press ENTER to go back: ", attrs=["bold"]))
 
 
 if __name__ == '__main__':
-
-    main([])
-    clear_and_print_banner()
+    main()

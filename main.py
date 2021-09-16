@@ -118,6 +118,10 @@ def main() -> None:
             clear_and_print_banner()
             weather_data.current.print_report()
 
+            if weather_data.alerts is not None:
+                print()
+                weather_data.alerts.print_report()
+
             print(colored("\nCheck out one of the forecasts:", attrs=["bold"]))
             print("1) Minutely-precipitation for the next 60-minutes")
             print("2) Hourly-weather for the next 24-hours")

@@ -8,7 +8,6 @@ from config import *
 from typing import Any
 from datetime import tzinfo
 from tabulate import tabulate
-from termcolor import colored
 
 
 class Frequency:
@@ -77,8 +76,7 @@ class Current:
         self.snow = float(data["snow"]["1h"]) if "snow" in data else None
 
     def print_report(self) -> None:
-        print(format_datetime(self.dt))
-        print(f"{self.city}, {self.state}")
+        print(format_report_header(self.dt, self.city, self.state))
 
         print(f"Current Weather: {self.weather.description.capitalize()}.")
         self.weather.print_report()
@@ -106,7 +104,8 @@ class Minutely(FrequencyData):
             self.dt = to_datetime(int(data["dt"]), timezone)
             self.precipitation = float(data["precipitation"])
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo) -> None:
+    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+        self.dt = dt
         self.city = city
         self.state = state
         self.timezone = timezone
@@ -116,9 +115,7 @@ class Minutely(FrequencyData):
         return self._data[point]
 
     def print_report(self, num_points: int = 60) -> None:
-        print(format_datetime(self._data[0].dt))
-        print(f"{self.city}, {self.state}")
-
+        print(format_report_header(self.dt, self.city, self.state))
         print(
             f"Mean precipitation for the next {num_points}-minute: ",
             f"{np.mean([x.precipitation for x in self._data[:num_points]]):.2f}",
@@ -167,7 +164,8 @@ class Hourly(FrequencyData):
             self.rain = float(data["rain"]["1h"]) if "rain" in data else None
             self.snow = float(data["snow"]["1h"]) if "snow" in data else None
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo) -> None:
+    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+        self.dt = dt
         self.city = city
         self.state = state
         self.timezone = timezone
@@ -177,8 +175,7 @@ class Hourly(FrequencyData):
         return self._data[point]
 
     def print_report(self, num_points: int = 24) -> None:
-        print(format_datetime(self._data[0].dt))
-        print(f"{self.city}, {self.state}")
+        print(format_report_header(self.dt, self.city, self.state))
 
         data = [[
             format_datetime(x.dt, fmt="%I%p"),
@@ -235,7 +232,8 @@ class Daily(FrequencyData):
             self.rain = float(data["rain"]) if "rain" in data else None
             self.snow = float(data["snow"]) if "snow" in data else None
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo) -> None:
+    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+        self.dt = dt
         self.city = city
         self.state = state
         self.timezone = timezone
@@ -245,8 +243,7 @@ class Daily(FrequencyData):
         return self._data[point]
 
     def print_report(self, num_points: int = 24) -> None:
-        print(format_datetime(self._data[0].dt))
-        print(f"{self.city}, {self.state}")
+        print(format_report_header(self.dt, self.city, self.state))
 
         data = [
             ["High"] + [f"{round(x.temp['max']):d}" + UNITS_LIB[UNITS]["temp"] for x in self._data[:num_points]],
@@ -302,3 +299,17 @@ class Alerts:
 
     def at_ind(self, ind: int) -> Alert:
         return self._data[ind]
+
+    def print_report(self, num_points: int = None) -> None:
+        print(colored("WEATHER ALERT", "red", attrs=["blink", "bold"]))
+        for alert in self._data[:num_points]:
+            data = [
+                ["From"] + [alert.sender_name],
+                ["Time"] + [f"In effect from {format_datetime(alert.start)} to {format_datetime(alert.end)}"],
+                ["Description"] + [alert.description],
+            ]
+
+            headers = [""] + [alert.event]
+
+            print(tabulate(data, headers, tablefmt="fancy_grid"))
+            print()

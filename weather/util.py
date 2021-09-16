@@ -1,5 +1,6 @@
 from datetime import tzinfo, datetime
 from constants import *
+from termcolor import colored
 
 
 def get_current_local_datetime() -> datetime:
@@ -16,6 +17,15 @@ def to_datetime(dt: int, timezone: tzinfo = None) -> datetime:
 
 def format_datetime(date_time: datetime, fmt: str = "%A, %d %B %Y   %I:%M%p") -> str:
     return date_time.strftime(fmt)
+
+
+def format_report_header(date_time: datetime, city: str, state: str,
+                         fmt: str = "%A, %d %B %Y   %I:%M%p", bold: bool = True, with_newline: bool = True) -> str:
+    return colored(
+                format_datetime(date_time, fmt=fmt) +
+                "\n" +
+                f"{city}, {state}",
+                attrs=(["bold"] if bold else None)) + ("\n" if with_newline else "")
 
 
 def format_visibility(visibility: int) -> str:

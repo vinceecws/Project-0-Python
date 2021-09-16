@@ -80,16 +80,16 @@ class Current:
         print(format_datetime(self.dt))
         print(f"{self.city}, {self.state}")
 
-        print("Current Weather:")
+        print(f"Current Weather: {self.weather.description.capitalize()}.")
         self.weather.print_report()
 
         data = [
-            ["Temperature", f"{self.temp:.2f}" + UNITS_IMPERIAL["temp"]],
-            ["Feels Like", f"{self.feels_like:.2f}" + UNITS_IMPERIAL["feels_like"]],
+            ["Temperature", f"{self.temp:.2f}" + UNITS_LIB[UNITS]["temp"]],
+            ["Feels Like", f"{self.feels_like:.2f}" + UNITS_LIB[UNITS]["feels_like"]],
             ["Visibility", format_visibility(self.visibility)],
             ["Humidity", f"{self.humidity}" + UNITS_ALL["humidity"]],
             ["Pressure", f"{self.pressure}" + UNITS_ALL["pressure"]],
-            ["Wind", f"{self.wind_speed}" + UNITS_IMPERIAL["wind_speed"] + " " +
+            ["Wind", f"{self.wind_speed}" + UNITS_LIB[UNITS]["wind_speed"] + " " +
              format_wind_deg(self.wind_deg, nsew_only=True)]
         ]
 
@@ -126,15 +126,20 @@ class Minutely(FrequencyData):
         )
 
     def plot_data(self, num_points: int = 60) -> None:
-        print(colored(f"{num_points}-MINUTE FORECAST", attrs=["bold"]))
-
         precipitation = [y.precipitation for y in self._data[:num_points]]
         x_labels = [format_datetime(x.dt, fmt="%I:%M%p") for x in self._data[:num_points]]
         x_ticks = list(range(len(x_labels)))
-        plt.scatter(precipitation, label="Precipitation " + UNITS_ALL["precipitation"])
+        plt.title(f"{num_points}-MINUTE PRECIPITATION FORECAST")
+        plt.scatter(precipitation, label="Precipitation " + UNITS_ALL["precipitation"], marker=PLOT_MARKER_1)
         plt.plotsize(PLOT_SIZE_X, PLOT_SIZE_Y)
         plt.ticks(None, len(x_labels))
         plt.xticks(x_ticks, x_labels)
+        if PLOT_CANVAS_COLOR is not None:
+            plt.canvas_color(PLOT_CANVAS_COLOR)
+        if PLOT_AXES_COLOR is not None:
+            plt.axes_color(PLOT_AXES_COLOR)
+        if PLOT_TICKS_COLOR is not None:
+            plt.ticks_color(PLOT_TICKS_COLOR)
         plt.show()
         plt.clear_figure()
 
@@ -177,10 +182,10 @@ class Hourly(FrequencyData):
 
         data = [[
             format_datetime(x.dt, fmt="%I%p"),
-            f"{round(x.temp):d}" + UNITS_IMPERIAL["temp"],
+            f"{round(x.temp):d}" + UNITS_LIB[UNITS]["temp"],
             f"{round(x.pop * 100):d}" + UNITS_ALL["pop"],
-            f"{x.wind_speed}{UNITS_IMPERIAL['wind_speed']} {format_wind_deg(x.wind_deg, nsew_only=True)}",
-            x.weather.description
+            f"{x.wind_speed}{UNITS_LIB[UNITS]['wind_speed']} {format_wind_deg(x.wind_deg, nsew_only=True)}",
+            x.weather.description.capitalize()
         ] for x in self._data[:num_points]]
 
         headers = ["Time", "Temperature", "% of Rain", "Wind", "Weather"]
@@ -188,17 +193,22 @@ class Hourly(FrequencyData):
         print(tabulate(data, headers))
 
     def plot_data(self, num_points: int = 24) -> None:
-        print(colored(f"{num_points}-HOUR FORECAST", attrs=["bold"]))
-
         temp = [y.temp for y in self._data[:num_points]]
         feels_like = [y.feels_like for y in self._data[:num_points]]
         x_labels = [format_datetime(x.dt, fmt="%I%p") for x in self._data[:num_points]]
         x_ticks = list(range(len(x_labels)))
-        plt.scatter(temp, label="Temperature " + UNITS_IMPERIAL["temp"])
-        plt.scatter(feels_like, label="Feels Like " + UNITS_IMPERIAL["feels_like"])
+        plt.title(f"{num_points}-HOUR TEMPERATURE FORECAST")
+        plt.scatter(temp, label="Temperature " + UNITS_LIB[UNITS]["temp"], marker=PLOT_MARKER_1)
+        plt.scatter(feels_like, label="Feels Like " + UNITS_LIB[UNITS]["feels_like"], marker=PLOT_MARKER_2)
         plt.plotsize(PLOT_SIZE_X, PLOT_SIZE_Y)
         plt.ticks(None, len(x_labels))
         plt.xticks(x_ticks, x_labels)
+        if PLOT_CANVAS_COLOR is not None:
+            plt.canvas_color(PLOT_CANVAS_COLOR)
+        if PLOT_AXES_COLOR is not None:
+            plt.axes_color(PLOT_AXES_COLOR)
+        if PLOT_TICKS_COLOR is not None:
+            plt.ticks_color(PLOT_TICKS_COLOR)
         plt.show()
         plt.clear_figure()
 
@@ -239,13 +249,13 @@ class Daily(FrequencyData):
         print(f"{self.city}, {self.state}")
 
         data = [
-            ["High"] + [f"{round(x.temp['max']):d}" + UNITS_IMPERIAL["temp"] for x in self._data[:num_points]],
-            ["Low"] + [f"{round(x.temp['min']):d}" + UNITS_IMPERIAL["temp"] for x in self._data[:num_points]],
+            ["High"] + [f"{round(x.temp['max']):d}" + UNITS_LIB[UNITS]["temp"] for x in self._data[:num_points]],
+            ["Low"] + [f"{round(x.temp['min']):d}" + UNITS_LIB[UNITS]["temp"] for x in self._data[:num_points]],
             ["% of Rain"] + [f"{round(x.pop * 100):d}" + UNITS_ALL["pop"] for x in self._data[:num_points]],
-            ["Wind"] + [f"{x.wind_speed}{UNITS_IMPERIAL['wind_speed']} {format_wind_deg(x.wind_deg, nsew_only=True)}"
+            ["Wind"] + [f"{x.wind_speed}{UNITS_LIB[UNITS]['wind_speed']} {format_wind_deg(x.wind_deg, nsew_only=True)}"
                         for x in self._data[:num_points]],
             ["Weather"] + [x.weather.main for x in self._data[:num_points]],
-            [""] + [x.weather.description for x in self._data[:num_points]]
+            [""] + [x.weather.description.capitalize() for x in self._data[:num_points]]
         ]
 
         headers = [""] + ["Today"] + [format_datetime(x.dt, fmt="%a, %b %d") for x in self._data[1:num_points]]
@@ -253,17 +263,22 @@ class Daily(FrequencyData):
         print(tabulate(data, headers))
 
     def plot_data(self, num_points: int = 7) -> None:
-        print(colored(f"{num_points}-DAY FORECAST", attrs=["bold"]))
-
         temp = [round(y.temp["max"] + y.temp["min"]) / 2 for y in self._data[:num_points]]
         feels_like = [round(max(y.feels_like.values()) + min(y.feels_like.values())) / 2 for y in self._data[:num_points]]
         x_labels = [format_datetime(x.dt, fmt="%a") for x in self._data[:num_points]]
         x_ticks = list(range(len(x_labels)))
-        plt.scatter(temp, label="Avg. Temperature " + UNITS_IMPERIAL["temp"])
-        plt.scatter(feels_like, label="Feels Like " + UNITS_IMPERIAL["feels_like"])
+        plt.title(f"{num_points}-DAY TEMPERATURE FORECAST")
+        plt.scatter(temp, label="Avg. Temperature " + UNITS_LIB[UNITS]["temp"], marker=PLOT_MARKER_1)
+        plt.scatter(feels_like, label="Feels Like " + UNITS_LIB[UNITS]["feels_like"], marker=PLOT_MARKER_2)
         plt.plotsize(PLOT_SIZE_X, PLOT_SIZE_Y)
         plt.ticks(None, len(x_labels))
         plt.xticks(x_ticks, x_labels)
+        if PLOT_CANVAS_COLOR is not None:
+            plt.canvas_color(PLOT_CANVAS_COLOR)
+        if PLOT_AXES_COLOR is not None:
+            plt.axes_color(PLOT_AXES_COLOR)
+        if PLOT_TICKS_COLOR is not None:
+            plt.ticks_color(PLOT_TICKS_COLOR)
         plt.show()
         plt.clear_figure()
 

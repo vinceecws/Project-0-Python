@@ -14,7 +14,7 @@ def to_datetime(dt: int, timezone: tzinfo = None) -> datetime:
     return datetime.fromtimestamp(dt, timezone)
 
 
-def format_datetime(date_time: datetime, fmt: str = "%A, %d %B %Y   %H:%M%p") -> str:
+def format_datetime(date_time: datetime, fmt: str = "%A, %d %B %Y   %I:%M%p") -> str:
     return date_time.strftime(fmt)
 
 

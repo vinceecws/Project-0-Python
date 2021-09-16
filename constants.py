@@ -39,3 +39,22 @@ UNITS_IMPERIAL = {
     "wind_speed": "mph",
     "wind_gust": "mph"
 }
+UNITS_METRIC = {
+    "temp": "°C",
+    "feels_like": "°C",
+    "dew_point": "°C",
+    "wind_speed": "m/s",
+    "wind_gust": "m/s"
+}
+UNITS_STANDARD = {
+    "temp": "K",
+    "feels_like": "K",
+    "dew_point": "K",
+    "wind_speed": "m/s",
+    "wind_gust": "m/s"
+}
+UNITS_LIB = {
+    "standard": UNITS_STANDARD,
+    "metric": UNITS_METRIC,
+    "imperial": UNITS_IMPERIAL
+}

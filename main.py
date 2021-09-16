@@ -12,11 +12,9 @@ from urllib.error import HTTPError
 
 
 def get_geo(city: str, state: str, limit: int = 10) -> dict[str, str]:
-    city = parse.quote(city)
-    state = parse.quote(state)
-
     url = parse.urljoin(BASE_URL, GEO_ENDPOINT) + \
-          f"?q={city},{state},US&limit={limit}&appid={API_KEY}"
+          f"?q={parse.quote_plus(city)},{parse.quote_plus(state)},US&limit={limit}&appid={API_KEY}"
+
     try:
         res = json.loads(request.urlopen(url).read())
     except HTTPError as err:
@@ -113,7 +111,7 @@ def main() -> None:
             print(colored("Oh no! API server is not responding. Maybe out of quota?", "red", attrs=["bold"]))
             print("Application will exit now...")
             exit()
-        print(json.dumps(weather, sort_keys=True, indent=4))
+
         weather_data = WeatherData(weather, lat_lon["city"], lat_lon["state"])
 
         while True:

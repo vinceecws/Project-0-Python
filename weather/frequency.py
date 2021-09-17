@@ -2,12 +2,14 @@ import abc
 import plotext as plt
 import numpy as np
 
-from .util import *
-from constants import *
-from config import *
 from typing import Any
 from datetime import tzinfo
 from tabulate import tabulate
+from termcolor import colored
+from config import *
+from constants import UNITS_ALL
+from .util import to_datetime, format_datetime, \
+    format_report_header, format_visibility, format_wind_deg
 
 
 class Frequency:
@@ -54,7 +56,13 @@ class Weather:
 
 class Current:
 
-    def __init__(self, data: dict[str, Any], city: str, state: str, timezone: tzinfo) -> None:
+    def __init__(
+            self,
+            data: dict[str, Any],
+            city: str,
+            state: str,
+            timezone: tzinfo
+    ) -> None:
         self.city = city
         self.state = state
         self.timezone = timezone
@@ -104,7 +112,15 @@ class Minutely(FrequencyData):
             self.dt = to_datetime(int(data["dt"]), timezone)
             self.precipitation = float(data["precipitation"])
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+    def __init__(
+            self,
+            data: list[dict[str, Any]],
+            city: str,
+            state: str,
+            timezone:
+            tzinfo,
+            dt: datetime
+    ) -> None:
         self.dt = dt
         self.city = city
         self.state = state
@@ -127,7 +143,8 @@ class Minutely(FrequencyData):
         x_labels = [format_datetime(x.dt, fmt="%I:%M%p") for x in self._data[:num_points]]
         x_ticks = list(range(len(x_labels)))
         plt.title(f"{num_points}-MINUTE PRECIPITATION FORECAST")
-        plt.scatter(precipitation, label="Precipitation " + UNITS_ALL["precipitation"], marker=PLOT_MARKER_1)
+        plt.scatter(precipitation, label="Precipitation " +
+                    UNITS_ALL["precipitation"], marker=PLOT_MARKER_1)
         plt.plotsize(PLOT_SIZE_X, PLOT_SIZE_Y)
         plt.ticks(None, len(x_labels))
         plt.xticks(x_ticks, x_labels)
@@ -164,7 +181,14 @@ class Hourly(FrequencyData):
             self.rain = float(data["rain"]["1h"]) if "rain" in data else None
             self.snow = float(data["snow"]["1h"]) if "snow" in data else None
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+    def __init__(
+            self,
+            data: list[dict[str, Any]],
+            city: str,
+            state: str,
+            timezone: tzinfo,
+            dt: datetime
+    ) -> None:
         self.dt = dt
         self.city = city
         self.state = state
@@ -181,7 +205,8 @@ class Hourly(FrequencyData):
             format_datetime(x.dt, fmt="%I%p"),
             f"{round(x.temp):d}" + UNITS_LIB[UNITS]["temp"],
             f"{round(x.pop * 100):d}" + UNITS_ALL["pop"],
-            f"{x.wind_speed}{UNITS_LIB[UNITS]['wind_speed']} {format_wind_deg(x.wind_deg, nsew_only=True)}",
+            f"{x.wind_speed}{UNITS_LIB[UNITS]['wind_speed']} " +
+                f"{format_wind_deg(x.wind_deg, nsew_only=True)}",
             x.weather.description.capitalize()
         ] for x in self._data[:num_points]]
 
@@ -232,7 +257,15 @@ class Daily(FrequencyData):
             self.rain = float(data["rain"]) if "rain" in data else None
             self.snow = float(data["snow"]) if "snow" in data else None
 
-    def __init__(self, data: list[dict[str, Any]], city: str, state: str, timezone: tzinfo, dt: datetime) -> None:
+    def __init__(
+            self,
+            data:
+            list[dict[str, Any]],
+            city: str,
+            state: str,
+            timezone: tzinfo,
+            dt: datetime
+    ) -> None:
         self.dt = dt
         self.city = city
         self.state = state

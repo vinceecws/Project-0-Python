@@ -1,6 +1,6 @@
 from datetime import tzinfo, datetime
-from constants import *
 from termcolor import colored
+from constants import UNITS_ALL, WIND_DEG_QUADRANT
 
 
 def get_current_local_datetime() -> datetime:
